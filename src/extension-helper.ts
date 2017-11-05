@@ -1,4 +1,4 @@
-// modified according to the prism website 
+// modified according to the prism website
 // http://prismjs.com/#languages-list
 const scopesForLanguageName = {
   'sh': 'bash',
@@ -12,6 +12,9 @@ const scopesForLanguageName = {
   'cs': 'csharp',
   'csharp': 'csharp',
   'css': 'css',
+  'scheme' : 'scheme',
+  'Scheme' : 'scheme',
+  'bigloo' : 'scheme',
   'scss': 'scss',
   'sass': 'sass',
   'erlang': 'erlang',
