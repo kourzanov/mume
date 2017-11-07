@@ -1,6 +1,12 @@
 // modified according to the prism website
 // http://prismjs.com/#languages-list
 const scopesForLanguageName = {
+  'awk': 'awk',
+  'Awk': 'awk',
+  'gawk': 'awk',
+  'Gawk': 'awk',
+  'nawk': 'awk',
+  'Nawk': 'awk',
   'sh': 'bash',
   'bash': 'bash',
   'c': 'c',

@@ -48,7 +48,7 @@ function processMath(text:string, {mathInlineDelimiters, mathBlockDelimiters}):s
     let math = $2
     math = math.replace(/\n/g, '').replace(/\#slash\_dollarsign\#/g, '\\\$')
     math = utility.escapeString(math)
-    return `<p align="center"><img src=\"https://latex.codecogs.com/gif.latex?${(math.trim().replace(/ /g, '%20'))}\"/></p>  \n`
+    return `<p align="center"><img src=\"https://latex.codecogs.com/png.latex?${(math.trim().replace(/ /g, '%20'))}\"/></p>  \n`
   })
 
   // inline
@@ -57,7 +57,7 @@ function processMath(text:string, {mathInlineDelimiters, mathBlockDelimiters}):s
     let math = $2
     math = math.replace(/\n/g, '').replace(/\#slash\_dollarsign\#/g, '\\\$')
     math = utility.escapeString(math)
-    return `<img src=\"https://latex.codecogs.com/gif.latex?${(math.trim().replace(/ /g, '%20'))}\"/>`
+    return `<img src=\"https://latex.codecogs.com/png.latex?${(math.trim().replace(/ /g, '%20'))}\"/>`
   })
 
   line = line.replace(/\#slash\_dollarsign\#/g, '\\\$')
