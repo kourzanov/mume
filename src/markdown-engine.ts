@@ -90,11 +90,11 @@ export interface MarkdownEngineConfig {
 
 export interface HTMLTemplateOption {
   /**
-   * whether is for print. 
+   * whether is for print.
    */
   isForPrint: boolean
   /**
-   * whether is for prince export. 
+   * whether is for prince export.
    */
   isForPrince: boolean
   /**
@@ -132,7 +132,7 @@ const defaultMarkdownEngineConfig:MarkdownEngineConfig = {
   enableTypographer: false,
   enableWikiLinkSyntax: true,
   enableEmojiSyntax: true,
-  enableExtendedTableSyntax: false, 
+  enableExtendedTableSyntax: false,
   enableCriticMarkupSyntax: false,
   wikiLinkFileExtension: '.md',
   protocolsWhiteList: 'http, https, atom, file',
@@ -162,8 +162,8 @@ let MODIFY_SOURCE:(codeChunkData:CodeChunkData, result:string, filePath:string)=
 export class MarkdownEngine {
   /**
    * Modify markdown source, append `result` after corresponding code chunk.
-   * @param codeChunkData 
-   * @param result 
+   * @param codeChunkData
+   * @param result
    */
   public static async modifySource(codeChunkData:CodeChunkData, result:string, filePath:string) {
     if (MODIFY_SOURCE) {
@@ -178,16 +178,16 @@ export class MarkdownEngine {
 
   /**
    * Bind cb to MODIFY_SOURCE
-   * @param cb 
+   * @param cb
    */
   public static onModifySource(cb:(codeChunkData:CodeChunkData, result:string, filePath:string)=>Promise<string>) {
     MODIFY_SOURCE = cb
   }
 
   /**
-   * markdown file path 
+   * markdown file path
    */
-  private readonly filePath: string 
+  private readonly filePath: string
   private readonly fileDirectoryPath: string
   private readonly projectDirectoryPath: string
 
@@ -203,32 +203,32 @@ export class MarkdownEngine {
 
   private md;
 
-  // caches 
+  // caches
   private graphsCache:{[key:string]:string} = {}
 
-  // code chunks 
+  // code chunks
   private codeChunksData:{[key:string]:CodeChunkData} = {}
 
-  // files cache 
+  // files cache
   private filesCache:{[key:string]:string} = {}
 
   /**
-   * cachedHTML is the cache of html generated from the markdown file.  
+   * cachedHTML is the cache of html generated from the markdown file.
    */
   // private cachedHTML:string = '';
 
   /**
-   * Check whether the preview is in presentation mode.  
+   * Check whether the preview is in presentation mode.
    */
   public isPreviewInPresentationMode:boolean = false
 
   constructor(args:{
     /**
-     * The markdown file path.  
+     * The markdown file path.
      */
     filePath: string,
     /**
-     * The project directory path.  
+     * The project directory path.
      */
     projectDirectoryPath: string,
     /**
@@ -239,7 +239,7 @@ export class MarkdownEngine {
     this.filePath = args.filePath
     this.fileDirectoryPath = path.dirname(this.filePath)
     this.projectDirectoryPath = args.projectDirectoryPath || this.fileDirectoryPath
-    
+
     this._originalConfig = args.config
     this.resetConfig()
 
@@ -248,7 +248,7 @@ export class MarkdownEngine {
 
     this.md = new MarkdownIt(
       Object.assign({}, defaults, {typographer: this.enableTypographer, breaks: this.breakOnSingleNewLine}))
-    
+
     // markdown-it extensions
     this.md.use(require(path.resolve(extensionDirectoryPath, './dependencies/markdown-it/extensions/markdown-it-footnote.min.js')))
     this.md.use(require(path.resolve(extensionDirectoryPath, './dependencies/markdown-it/extensions/markdown-it-sub.min.js')))
@@ -272,7 +272,7 @@ export class MarkdownEngine {
   }
 
   /**
-   * Set default values 
+   * Set default values
    */
   private initConfig() {
     // break on single newline
@@ -287,7 +287,7 @@ export class MarkdownEngine {
   }
 
   public updateConfiguration(config) {
-    this.config = Object.assign({}, this.config, config) 
+    this.config = Object.assign({}, this.config, config)
     this.initConfig()
 
     this.md.set({breaks: this.breakOnSingleNewLine, typographer: this.enableTypographer})
@@ -309,8 +309,8 @@ export class MarkdownEngine {
   }
 
   /**
-   * 
-   * @param content the math expression 
+   *
+   * @param content the math expression
    * @param openTag the open tag, eg: '\('
    * @param closeTag the close tag, eg: '\)'
    * @param displayMode whether to be rendered in display mode
@@ -405,7 +405,7 @@ export class MarkdownEngine {
     })
 
     /**
-     * math renderer 
+     * math renderer
      */
     this.md.renderer.rules.math = (tokens, idx)=> {
       return this.parseMath(tokens[idx] || {})
@@ -413,7 +413,7 @@ export class MarkdownEngine {
 
     /**
      * wikilink rule
-     * inline [[]] 
+     * inline [[]]
      * [[...]]
      */
     this.md.inline.ruler.before('autolink', 'wikilink',
@@ -443,7 +443,7 @@ export class MarkdownEngine {
 
       if (content && !silent) {
         const token = state.push('wikilink')
-        token.content = content 
+        token.content = content
 
         state.pos += content.length + 2 * tag.length
         return true
@@ -463,7 +463,7 @@ export class MarkdownEngine {
       return `<a href="${wikiLink}">${linkText}</a>`
     }
 
-    // code fences 
+    // code fences
     // modified to support math block
     // check https://github.com/jonschlinkert/remarkable/blob/875554aedb84c9dd190de8d0b86c65d2572eadd5/lib/rules.js
     this.md.renderer.rules.fence = (tokens, idx, options, env, instance)=> {
@@ -502,7 +502,7 @@ export class MarkdownEngine {
      * CriticMarkup rule
      */
     this.md.inline.ruler.before('strikethrough', 'critic-markup', (state, silent)=> {
-      if (!this.config.enableCriticMarkupSyntax) return false 
+      if (!this.config.enableCriticMarkupSyntax) return false
 
       const src = state.src,
             pos = state.pos
@@ -515,38 +515,38 @@ export class MarkdownEngine {
       )) {
         let tag = src.slice(pos+1, pos+3)
         let closeTag = tag
-        if (closeTag[0] === '>') 
+        if (closeTag[0] === '>')
           closeTag = '<<}'
-        else 
+        else
           closeTag = closeTag + '}'
 
         let i = pos + 3,
             end = -1,
-            content = null 
+            content = null
         while(i < src.length) {
           if (src.startsWith(closeTag, i)) {
-            end = i 
+            end = i
             break
           }
 
           i += 1
         }
 
-        if (end >= 0) 
+        if (end >= 0)
           content = src.slice(pos + 3, end)
-        else 
+        else
           return false
 
         if (content && !silent) {
           const token = state.push('critic-markup')
           token.content = content
-          token.tag = tag 
+          token.tag = tag
 
           state.pos = end + closeTag.length
           return true
         } else {
           return false
-        } 
+        }
       } else {
         return false
       }
@@ -569,7 +569,7 @@ export class MarkdownEngine {
         return `<span style="display:none">${content}</span>`
       } else { // {~~[text1]~>[text2]~~}
         const arr = content.split('~>')
-        if (arr.length === 2) { 
+        if (arr.length === 2) {
           return `<del>${arr[0]}</del><ins>${arr[1]}</ins>`
         } else {
           return `<code>Error: ~> not found.</code>`
@@ -588,8 +588,8 @@ export class MarkdownEngine {
         if (markup.startsWith('fa-')) { // font-awesome
           return `<i class="fa ${markup}" aria-hidden="true"></i>`
         } else { // emoji
-          return t['content']          
-        }      
+          return t['content']
+        }
       } else {
         return ':' + token[idx]['markup'] + ':'
       }
@@ -601,7 +601,7 @@ export class MarkdownEngine {
    * Embed local images. Load the image file and display it in base64 format
    */
   private async embedLocalImages($) {
-    const asyncFunctions = [] 
+    const asyncFunctions = []
 
     $('img').each((i, img)=> {
       const $img = $(img)
@@ -612,7 +612,7 @@ export class MarkdownEngine {
         src = utility.removeFileProtocol(src)
         src = src.replace(/\?(\.|\d)+$/, '') // remove cache
         const imageType = path.extname(src).slice(1)
-        if (imageType === 'svg') return 
+        if (imageType === 'svg') return
         asyncFunctions.push(new Promise((resolve, reject)=> {
           fs.readFile(decodeURI(src), (error, data)=> {
             if (error) return resolve(null)
@@ -629,8 +629,8 @@ export class MarkdownEngine {
   }
 
   /**
-   * Load local svg files and embed them into html directly.  
-   * @param $ 
+   * Load local svg files and embed them into html directly.
+   * @param $
    */
   private async embedSVG($) {
     const asyncFunctions = []
@@ -643,7 +643,7 @@ export class MarkdownEngine {
         src = utility.removeFileProtocol(src)
         src = src.replace(/\?(\.|\d)+$/, '') // remove cache
         const imageType = path.extname(src).slice(1)
-        if (imageType !== 'svg') return 
+        if (imageType !== 'svg') return
           asyncFunctions.push(new Promise((resolve, reject)=> {
             fs.readFile(decodeURI(src), (error, data)=> {
               if (error) return resolve(null)
@@ -666,17 +666,17 @@ export class MarkdownEngine {
   public generateScriptsForPreview(isForPresentation=false, yamlConfig={}) {
     let scripts = ""
 
-    // prevent `id="exports"` element from linked to `window` object.  
+    // prevent `id="exports"` element from linked to `window` object.
     scripts += `<script>var exports = undefined</script>`
 
-    // jquery 
+    // jquery
     scripts += `<script type="text/javascript" src="file:///${path.resolve(utility.extensionDirectoryPath, './dependencies/jquery/jquery.js')}"></script>`
-  
+
     // jquery contextmenu
     scripts += `<script type="text/javascript" src="file:///${path.resolve(utility.extensionDirectoryPath, './dependencies/jquery-contextmenu/jquery.ui.position.min.js')}"></script>`
     scripts += `<script type="text/javascript" src="file:///${path.resolve(utility.extensionDirectoryPath, './dependencies/jquery-contextmenu/jquery.contextMenu.min.js')}"></script>`
 
-    // jquery modal 
+    // jquery modal
     scripts += `<script type="text/javascript" src="file:///${path.resolve(utility.extensionDirectoryPath, './dependencies/jquery-modal/jquery.modal.min.js')}"></script>`
 
     // crpto-js
@@ -689,7 +689,7 @@ export class MarkdownEngine {
     scripts += `<script type="text/javascript" src="file:///${path.resolve(utility.extensionDirectoryPath, './dependencies/wavedrom/default.js')}"></script>`
     scripts += `<script type="text/javascript" src="file:///${path.resolve(utility.extensionDirectoryPath, './dependencies/wavedrom/wavedrom.min.js')}"></script>`
 
-    // math 
+    // math
     if (this.config.mathRenderingOption === 'MathJax' || this.config.usePandocParser) {
       const mathJaxConfig = utility.configs.mathjaxConfig
       mathJaxConfig['tex2jax'] = mathJaxConfig['tex2jax'] || {}
@@ -704,7 +704,7 @@ export class MarkdownEngine {
     if (isForPresentation) {
       scripts += `<script src='file:///${path.resolve(utility.extensionDirectoryPath, './dependencies/reveal/lib/js/head.min.js')}'></script>`
       scripts += `<script src='file:///${path.resolve(utility.extensionDirectoryPath, './dependencies/reveal/js/reveal.js')}'></script>`
-  
+
       let presentationConfig = yamlConfig['presentation'] || {}
       let dependencies = presentationConfig['dependencies'] || []
       presentationConfig['dependencies'] = dependencies
@@ -716,12 +716,12 @@ export class MarkdownEngine {
       `
     }
 
-    // mermaid init 
+    // mermaid init
     scripts += `<script>
 ${utility.configs.mermaidConfig}
 if (window['MERMAID_CONFIG']) {
   window['MERMAID_CONFIG'].startOnLoad = false
-  window['MERMAID_CONFIG'].cloneCssStyles = false 
+  window['MERMAID_CONFIG'].cloneCssStyles = false
 }
 mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
 
@@ -752,12 +752,12 @@ if (typeof(window['Reveal']) !== 'undefined') {
   WaveDrom.ProcessAll()
       </script>`
     }
-    
+
     return scripts
   }
 
   /**
-   * Map preview theme to prism theme.  
+   * Map preview theme to prism theme.
    */
   static AutoPrismThemeMap = {
     'atom-dark.css': 'atom-dark.css',
@@ -791,12 +791,12 @@ if (typeof(window['Reveal']) !== 'undefined') {
   }
 
   /**
-   * Automatically pick code block theme for preview.  
+   * Automatically pick code block theme for preview.
    */
   private getPrismTheme(isPresentationMode=false) {
     if (this.config.codeBlockTheme === 'auto.css') {
       /**
-       * Automatically pick code block theme for preview.  
+       * Automatically pick code block theme for preview.
        */
       if (isPresentationMode) {
         return MarkdownEngine.AutoPrismThemeMapForPresentation[this.config.revealjsTheme] || 'default.css'
@@ -814,25 +814,25 @@ if (typeof(window['Reveal']) !== 'undefined') {
   public generateStylesForPreview(isPresentationMode=false) {
     let styles = ''
 
-    // loading.css 
+    // loading.css
     styles += `<link rel="stylesheet" href="file:///${path.resolve(utility.extensionDirectoryPath, './styles/loading.css')}">`
-  
+
     // jquery-contextmenu
     styles += `<link rel="stylesheet" href="file:///${path.resolve(utility.extensionDirectoryPath, `./dependencies/jquery-contextmenu/jquery.contextMenu.min.css`)}">`
-  
-    // jquery-modal 
+
+    // jquery-modal
     styles += `<link rel="stylesheet" href="file:///${path.resolve(utility.extensionDirectoryPath, `./dependencies/jquery-modal/jquery.modal.min.css`)}">`
 
-    // check math 
+    // check math
     if (this.config.mathRenderingOption === "KaTeX" && !this.config.usePandocParser) {
       styles += `<link rel="stylesheet" href="file:///${path.resolve(utility.extensionDirectoryPath, './dependencies/katex/katex.min.css')}">`
     }
 
-    // check mermaid 
+    // check mermaid
     styles += `<link rel="stylesheet" href="file:///${path.resolve(utility.extensionDirectoryPath, `./dependencies/mermaid/${this.config.mermaidTheme}`)}">`
 
     // check font-awesome
-    styles += `<link rel="stylesheet" href="file:///${path.resolve(utility.extensionDirectoryPath, `./dependencies/font-awesome/css/font-awesome.min.css`)}">`    
+    styles += `<link rel="stylesheet" href="file:///${path.resolve(utility.extensionDirectoryPath, `./dependencies/font-awesome/css/font-awesome.min.css`)}">`
 
     // check preview theme and revealjs theme
     if (!isPresentationMode) {
@@ -842,7 +842,7 @@ if (typeof(window['Reveal']) !== 'undefined') {
       styles += `<link rel="stylesheet" href="file:///${path.resolve(extensionDirectoryPath, `./styles/revealjs_theme/${this.config.revealjsTheme}`)}" >`
     }
 
-    // check prism 
+    // check prism
     styles += `<link rel="stylesheet" href="file:///${path.resolve(utility.extensionDirectoryPath, `./styles/prism_theme/${this.getPrismTheme(isPresentationMode)}`)}">`
 
     // style template
@@ -851,12 +851,12 @@ if (typeof(window['Reveal']) !== 'undefined') {
     // global styles
     styles += `<style>${utility.configs.globalStyle}</style>`
 
-    return styles  
+    return styles
   }
 
   /**
    * Generate <style> and <link> string from an array of file paths.
-   * @param JSAndCssFiles 
+   * @param JSAndCssFiles
    */
   private generateJSAndCssFilesForPreview(JSAndCssFiles=[]) {
     let output = ''
@@ -865,7 +865,7 @@ if (typeof(window['Reveal']) !== 'undefined') {
       if (sourcePath[0] === '/') {
         absoluteFilePath = 'file:///' + path.resolve(this.projectDirectoryPath, '.' + sourcePath)
       } else if (sourcePath.match(/^file:\/\//) || sourcePath.match(/^https?\:\/\//)) {
-        // do nothing 
+        // do nothing
       } else {
         absoluteFilePath = 'file:///' + path.resolve(this.fileDirectoryPath, sourcePath)
       }
@@ -883,9 +883,9 @@ if (typeof(window['Reveal']) !== 'undefined') {
    * Generate html template for preview.
    */
   public async generateHTMLTemplateForPreview({inputString="", body='', webviewScript='', scripts="", styles="", head=`<base href="${this.filePath}">`, config={}}):Promise<string> {
-    if (!inputString)  
+    if (!inputString)
       inputString = fs.readFileSync(this.filePath, {encoding:'utf-8'})
-    if (!webviewScript) 
+    if (!webviewScript)
       webviewScript = path.resolve(utility.extensionDirectoryPath, './out/src/webview.js')
     if (!body) // default body
       body = `
@@ -948,7 +948,7 @@ if (typeof(window['Reveal']) !== 'undefined') {
         <link rel="stylesheet" href="file:///${path.resolve(utility.extensionDirectoryPath , './styles/preview.css')}">
 
         ${this.generateJSAndCssFilesForPreview(JSAndCssFiles)}
-        ${head}        
+        ${head}
       </head>
       <body class="preview-container">
         <div class="mume markdown-preview" for="preview" ${isPresentationMode ? 'data-presentation-mode' : ''}>
@@ -960,13 +960,13 @@ if (typeof(window['Reveal']) !== 'undefined') {
       ${scripts}
       <script src="${webviewScript}"></script>
       </html>`
-    
+
       return htmlTemplate
   }
 
   /**
    * Generate HTML content
-   * @param html: this is the final content you want to put. 
+   * @param html: this is the final content you want to put.
    * @param yamlConfig: this is the front matter.
    * @param option: HTMLTemplateOption
    */
@@ -1014,17 +1014,17 @@ if (typeof(window['Reveal']) !== 'undefined') {
       mathStyle = ''
     }
 
-    // font-awesome 
+    // font-awesome
     let fontAwesomeStyle = ''
     if (html.indexOf('<i class="fa ') >= 0) {
       if (options.offline) {
-        fontAwesomeStyle = `<link rel="stylesheet" href="file:///${path.resolve(extensionDirectoryPath, `./dependencies/font-awesome/css/font-awesome.min.css`)}">`        
+        fontAwesomeStyle = `<link rel="stylesheet" href="file:///${path.resolve(extensionDirectoryPath, `./dependencies/font-awesome/css/font-awesome.min.css`)}">`
       } else {
-        fontAwesomeStyle = `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">`                
-      }        
+        fontAwesomeStyle = `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">`
+      }
     }
 
-    // mermaid 
+    // mermaid
     let mermaidScript = ''
     let mermaidStyle = ''
     let mermaidInitScript = ''
@@ -1041,7 +1041,7 @@ if (typeof(window['Reveal']) !== 'undefined') {
 ${mermaidConfig}
 if (window['MERMAID_CONFIG']) {
   window['MERMAID_CONFIG'].startOnLoad = false
-  window['MERMAID_CONFIG'].cloneCssStyles = false 
+  window['MERMAID_CONFIG'].cloneCssStyles = false
 }
 mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
 
@@ -1066,7 +1066,7 @@ if (typeof(window['Reveal']) !== 'undefined') {
 }
 </script>`
     }
-    // wavedrom 
+    // wavedrom
     let wavedromScript = ``,
         wavedromInitScript = ``
     if (html.indexOf('<div class="wavedrom">') >= 0) {
@@ -1119,13 +1119,13 @@ if (typeof(window['Reveal']) !== 'undefined') {
       `
     }
 
-    // prince 
+    // prince
     let princeClass = ""
     if (options.isForPrince) {
       princeClass = "prince"
     }
 
-    // phantomjs 
+    // phantomjs
     let phantomjsClass = ""
     if (options.phantomjsType) {
       if (options.phantomjsType === 'pdf') {
@@ -1139,43 +1139,43 @@ if (typeof(window['Reveal']) !== 'undefined') {
     title = title.slice(0, title.length - path.extname(title).length) // remove '.md'
     if (yamlConfig['title']) title = yamlConfig['title']
 
-    // prism and preview theme 
+    // prism and preview theme
     let styleCSS = ""
     try{
       // prism *.css
       styleCSS += (!this.config.printBackground && !yamlConfig['print_background'] && !yamlConfig["isPresentationMode"]) ?
       await utility.readFile(path.resolve(extensionDirectoryPath, `./styles/prism_theme/github.css`), {encoding:'utf-8'}) :
       await utility.readFile(path.resolve(extensionDirectoryPath, `./styles/prism_theme/${this.getPrismTheme(yamlConfig["isPresentationMode"])}`), {encoding:'utf-8'})
-      
+
       if (yamlConfig["isPresentationMode"]) {
         styleCSS += await utility.readFile(path.resolve(extensionDirectoryPath, `./styles/revealjs_theme/${this.config.revealjsTheme}`), {encoding:'utf-8'})
       } else {
         // preview theme
-        styleCSS += (!this.config.printBackground && !yamlConfig['print_background']) ? 
+        styleCSS += (!this.config.printBackground && !yamlConfig['print_background']) ?
           await utility.readFile(path.resolve(extensionDirectoryPath, `./styles/preview_theme/github-light.css`), {encoding:'utf-8'}) :
           await utility.readFile(path.resolve(extensionDirectoryPath, `./styles/preview_theme/${this.config.previewTheme}`), {encoding:'utf-8'})
       }
-      
+
       // style template
       styleCSS += await utility.readFile(path.resolve(extensionDirectoryPath, './styles/style-template.css'), {encoding:'utf-8'})
     } catch(e) {
       styleCSS = ''
     }
 
-    // global styles 
+    // global styles
     let globalStyles = ""
     try {
       globalStyles = await utility.getGlobalStyles()
     } catch(error) {
-      // ignore it 
+      // ignore it
     }
 
     // sidebar toc
     let sidebarTOC = '',
         sidebarTOCScript = '',
         sidebarTOCBtn = ''
-    if (!yamlConfig["isPresentationMode"] && !options.isForPrint && ( 
-      (!('html' in yamlConfig)) || 
+    if (!yamlConfig["isPresentationMode"] && !options.isForPrint && (
+      (!('html' in yamlConfig)) ||
       (yamlConfig['html'] && yamlConfig['html']['toc'] !== false))) { // enable sidebar toc by default
       sidebarTOC = `<div class="md-sidebar-toc">${this.tocHTML}</div>`
       sidebarTOCBtn = '<a id="sidebar-toc-btn">≡</a>'
@@ -1198,7 +1198,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
     }
 
     // task list script
-    // has to use `var` instead of `let` because `phantomjs` might cause issue.  
+    // has to use `var` instead of `let` because `phantomjs` might cause issue.
     const taskListScript = `<script>
 (function bindTaskListEvent() {
   var taskListItemCheckboxes = document.body.getElementsByClassName('task-list-item-checkbox')
@@ -1210,11 +1210,11 @@ sidebarTOCBtn.addEventListener('click', function(event) {
       li.classList.add('task-list-item')
     }
   }
-}())    
+}())
 </script>`
 
     // process styles
-    // move @import ''; to the very start.  
+    // move @import ''; to the very start.
     let styles = styleCSS + '\n' + globalStyles
     let imports = ''
     styles = styles.replace(/\@import\s+url\(([^)]+)\)\s*;/g, function(whole, url) {
@@ -1234,13 +1234,13 @@ sidebarTOCBtn.addEventListener('click', function(event) {
       ${mathStyle}
       ${mermaidStyle}
       ${fontAwesomeStyle}
-      
+
       ${presentationScript}
       ${mermaidScript}
       ${wavedromScript}
 
-      <style> 
-      ${styles} 
+      <style>
+      ${styles}
       </style>
     </head>
     <body ${options.isForPrint ? '' : 'for="html-export"'} ${yamlConfig["isPresentationMode"] ? 'data-presentation-mode' : ''}>
@@ -1264,12 +1264,12 @@ sidebarTOCBtn.addEventListener('click', function(event) {
       html = $.html()
     }
 
-    if (options.embedSVG) { // embed svg 
+    if (options.embedSVG) { // embed svg
       let $ = cheerio.load(html, {xmlMode: true})
       $ = await this.embedSVG($)
       html = $.html()
     }
-    
+
     return html.trim()
   }
 
@@ -1279,8 +1279,8 @@ sidebarTOCBtn.addEventListener('click', function(event) {
   public async openInBrowser({runAllCodeChunks=false}):Promise<void> {
     const inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
     let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeFilePath: false, hideFrontMatter: true, isForPreview: false, runAllCodeChunks})
-    html = await this.generateHTMLTemplateForExport(html, yamlConfig, 
-                                    {isForPrint: false, isForPrince: false, offline: true, embedLocalImages: false} )   
+    html = await this.generateHTMLTemplateForExport(html, yamlConfig,
+                                    {isForPrint: false, isForPrince: false, offline: true, embedLocalImages: false} )
     // create temp file
     const info = await utility.tempOpen({
       prefix: 'mume',
@@ -1288,15 +1288,15 @@ sidebarTOCBtn.addEventListener('click', function(event) {
     })
 
     await utility.write(info.fd, html)
-    
+
     // open in browser
     utility.openFile(info.path)
-    return 
+    return
   }
 
   /**
-   * 
-   * @param filePath 
+   *
+   * @param filePath
    * @return dest if success, error if failure
    */
   public async htmlExport({offline=false, runAllCodeChunks=false}):Promise<string> {
@@ -1311,14 +1311,14 @@ sidebarTOCBtn.addEventListener('click', function(event) {
     let embedSVG = true // <= embedSvg is enabled by default.
     if ('embed_svg' in htmlConfig) {
       embedSVG = htmlConfig['embed_svg']
-    } 
-    
+    }
+
     let dest = this.filePath
-    let extname = path.extname(dest) 
+    let extname = path.extname(dest)
     dest = dest.replace(new RegExp(extname+'$'), '.html')
 
     html = await this.generateHTMLTemplateForExport(html, yamlConfig, {
-        isForPrint: false, 
+        isForPrint: false,
         isForPrince: false,
         embedLocalImages: embedLocalImages,
         offline: offline,
@@ -1378,9 +1378,9 @@ sidebarTOCBtn.addEventListener('click', function(event) {
     await page.goto(loadPath)
 
     const puppeteerConfig = Object.assign(
-      { 
+      {
         path: dest
-      }, 
+      },
       yamlConfig['isPresentationMode'] ? {} : {
         margin: {
           top: '1cm',
@@ -1395,19 +1395,19 @@ sidebarTOCBtn.addEventListener('click', function(event) {
       await page.pdf(puppeteerConfig)
     } else {
       puppeteerConfig['fullPage'] = true // <= set to fullPage by default
-      await page.screenshot(puppeteerConfig)      
+      await page.screenshot(puppeteerConfig)
     }
     browser.close()
 
-    if (openFileAfterGeneration) utility.openFile(dest)      
+    if (openFileAfterGeneration) utility.openFile(dest)
     return dest
   }
 
   /**
    * Phantomjs file export
-   * The config could be set by front-matter. 
-   * Check https://github.com/marcbachmann/node-html-pdf website.  
-   * @param fileType the export file type 
+   * The config could be set by front-matter.
+   * Check https://github.com/marcbachmann/node-html-pdf website.
+   * @param fileType the export file type
    */
   public async phantomjsExport({fileType="pdf", runAllCodeChunks=false, openFileAfterGeneration=false}):Promise<string> {
     const inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
@@ -1471,13 +1471,13 @@ sidebarTOCBtn.addEventListener('click', function(event) {
     const inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
     let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeFilePath:false, hideFrontMatter:true, isForPreview: false, runAllCodeChunks})
     let dest = this.filePath
-    let extname = path.extname(dest) 
+    let extname = path.extname(dest)
     dest = dest.replace(new RegExp(extname+'$'), '.pdf')
 
     html = await this.generateHTMLTemplateForExport(html, yamlConfig, {
-        isForPrint: true, 
+        isForPrint: true,
         isForPrince: true,
-        embedLocalImages: false, 
+        embedLocalImages: false,
         offline: true
     })
 
@@ -1489,7 +1489,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
       return url
     } else {
       await princeConvert(info.path, dest)
-      
+
       //  open pdf
       if (openFileAfterGeneration)
         utility.openFile(dest)
@@ -1503,7 +1503,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
       $('img').each((offset, img)=> {
         const $img = $(img)
         const src = $img.attr('src') || ''
-        if (src.match(/^https?\:\/\//)) 
+        if (src.match(/^https?\:\/\//))
           imagesToDownload.push($img)
       })
     }
@@ -1517,7 +1517,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
         const stream = request(httpSrc).pipe(fs.createWriteStream(savePath))
 
         stream.on('finish', ()=> {
-          $img.attr('src', 'file:///' + savePath) 
+          $img.attr('src', 'file:///' + savePath)
           return resolve(savePath)
         })
       })
@@ -1527,8 +1527,8 @@ sidebarTOCBtn.addEventListener('click', function(event) {
   }
 
   /**
-   * 
-   * 
+   *
+   *
    * @return dest if success, error if failure
    */
   public async eBookExport({fileType='epub', runAllCodeChunks=false}:{
@@ -1542,7 +1542,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
     let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeFilePath:false, hideFrontMatter:true, isForPreview: false, runAllCodeChunks})
 
     let dest = this.filePath
-    let extname = path.extname(dest) 
+    let extname = path.extname(dest)
     dest = dest.replace(new RegExp(extname+'$'), '.'+fileType.toLowerCase())
 
     let ebookConfig = yamlConfig['ebook']
@@ -1583,21 +1583,21 @@ sidebarTOCBtn.addEventListener('click', function(event) {
       }
     }
 
-    // load the last ul as TOC, analyze toc links 
+    // load the last ul as TOC, analyze toc links
     function getStructure($ul, level) {
       $ul.children('li').each((offset, li)=> {
         const $li = $(li)
         const $a = $li.children('a').first()
-        if (!$a.length) return 
+        if (!$a.length) return
 
-        const filePath = decodeURIComponent($a.attr('href')) // markdown file path 
+        const filePath = decodeURIComponent($a.attr('href')) // markdown file path
         const heading = $a.html()
         const id = 'ebook-heading-id-' + headingOffset
 
         tocStructure.push({level, filePath, heading, id})
         headingOffset += 1
 
-        $a.attr('href', '#'+id) // change id 
+        $a.attr('href', '#'+id) // change id
         if ($li.children().length > 1) {
           getStructure($li.children().last(), level+1)
         }
@@ -1637,9 +1637,9 @@ sidebarTOCBtn.addEventListener('click', function(event) {
     $ = cheerio.load(outputHTML, {xmlMode: true})
     const downloadedImagePaths = await this.eBookDownloadImages($, dest)
 
-    // convert image to base64 if output html 
+    // convert image to base64 if output html
     if (path.extname(dest) === '.html') {
-      // check cover 
+      // check cover
       let coverImage = ''
       if (ebookConfig['cover']) {
         const cover = ebookConfig['cover'][0] === '/' ? ('file:///' + ebookConfig['cover']) : ebookConfig['cover']
@@ -1649,7 +1649,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
       $ = await this.embedLocalImages($)
     }
 
-    // retrieve html 
+    // retrieve html
     outputHTML = $.html()
     const title = ebookConfig['title'] || 'no title'
 
@@ -1662,8 +1662,8 @@ sidebarTOCBtn.addEventListener('click', function(event) {
         mathStyle = `<link rel="stylesheet" href="file:///${path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.css')}">`
       }
     }
-    
-    // prism and preview theme 
+
+    // prism and preview theme
     let styleCSS = ""
     try{
       const styles = await Promise.all([
@@ -1679,12 +1679,12 @@ sidebarTOCBtn.addEventListener('click', function(event) {
       styleCSS = ''
     }
 
-    // global styles 
+    // global styles
     let globalStyles = ""
     try {
       globalStyles = await utility.getGlobalStyles()
     } catch(error) {
-      // ignore it 
+      // ignore it
     }
 
     // only use github-light style for ebook
@@ -1695,9 +1695,9 @@ sidebarTOCBtn.addEventListener('click', function(event) {
     <title>${title}</title>
     <meta charset=\"utf-8\">
     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
-    <style> 
-    ${styleCSS} 
-    ${globalStyles} 
+    <style>
+    ${styleCSS}
+    ${globalStyles}
     </style>
     ${mathStyle}
   </head>
@@ -1706,17 +1706,17 @@ sidebarTOCBtn.addEventListener('click', function(event) {
     ${outputHTML}
     </div>
   </body>
-</html>            
+</html>
 `
     const fileName = path.basename(dest)
 
-    // save as html 
+    // save as html
     if (path.extname(dest) === '.html') {
       await utility.writeFile(dest, html)
       return dest
     }
 
-    // this function will be called later 
+    // this function will be called later
     function deleteDownloadedImages() {
       downloadedImagePaths.forEach((imagePath)=> {
         fs.unlink(imagePath, (error)=> {})
@@ -1729,7 +1729,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
       await utility.write(info.fd, html)
       await ebookConvert(info.path, dest, ebookConfig)
       deleteDownloadedImages()
-      return dest 
+      return dest
     } catch(error) {
       deleteDownloadedImages()
       throw error
@@ -1747,7 +1747,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
     }
 
     let config = {}
-    
+
     let endFrontMatterOffset = 0
     if (inputString.startsWith('---') && (endFrontMatterOffset = inputString.indexOf('\n---')) > 0) {
       let frontMatterString = inputString.slice(0, endFrontMatterOffset + 4)
@@ -1775,11 +1775,11 @@ sidebarTOCBtn.addEventListener('click', function(event) {
   }
 
   /**
-   * markdown(gfm) export 
+   * markdown(gfm) export
    */
   public async markdownExport({runAllCodeChunks=false}):Promise<string> {
     let inputString = await utility.readFile(this.filePath, {encoding: 'utf-8'})
-    
+
     if (runAllCodeChunks) { // this line of code is only used to get this.codeChunksData
       await this.parseMD(inputString, { useRelativeFilePath:true, isForPreview:false, hideFrontMatter:false, runAllCodeChunks})
     }
@@ -1797,8 +1797,8 @@ sidebarTOCBtn.addEventListener('click', function(event) {
      * markdownConfig has the following properties:
      *     path:                        destination of the output file
      *     image_dir:                   where to save the image file
-     *     use_abolute_image_path:      as the name shows.  
-     *     ignore_from_front_matter:    default is true.  
+     *     use_abolute_image_path:      as the name shows.
+     *     ignore_from_front_matter:    default is true.
      */
     let markdownConfig = {}
     if (config['markdown'])
@@ -1807,7 +1807,15 @@ sidebarTOCBtn.addEventListener('click', function(event) {
     if (!markdownConfig['image_dir']) {
       markdownConfig['image_dir'] = this.config.imageFolderPath
     }
-
+    if (!markdownConfig['base']) {
+     markdownConfig['base'] = ''
+    }
+    if (!markdownConfig['mdbase']) {
+     markdownConfig['mdbase'] = ''
+    }
+    if (!markdownConfig['token']) {
+     markdownConfig['token'] = ''
+    }
     if (!markdownConfig['path']) {
       if (this.filePath.match(/\.src\./)) {
         markdownConfig['path'] = this.filePath.replace(/\.src\./, '.')
@@ -1820,7 +1828,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
     // ignore_from_front_matter is `true` by default
     if (markdownConfig['ignore_from_front_matter'] || !('ignore_from_front_matter' in markdownConfig)) { // delete markdown config front-matter from the top front matter
       delete config['markdown']
-    } 
+    }
     if (config['export_on_save']) {
       delete config['export_on_save']
     }
@@ -1847,13 +1855,13 @@ sidebarTOCBtn.addEventListener('click', function(event) {
    * ---
    * export_on_save:
    *    html: true
-   *    prince: true   
+   *    prince: true
    *    phantomjs|chrome: true  // or pdf | jpeg | png
    *    pandoc: true
    *    ebook: true      // or epub | pdf | html | mobi
    *    markdown: true
    * ---
-   * @param data 
+   * @param data
    */
   private exportOnSave(data:object) {
     for (let exporter in data) {
@@ -1889,15 +1897,15 @@ sidebarTOCBtn.addEventListener('click', function(event) {
           fileTypes.forEach((fileType)=> {
             this.eBookExport({fileType})
           })
-        } 
+        }
       }
     }
   }
 
   /**
-   * 
-   * @param filePath 
-   * @param relative: whether to use the path relative to filePath or not.  
+   *
+   * @param filePath
+   * @param relative: whether to use the path relative to filePath or not.
    */
   private resolveFilePath(filePath:string='', relative:boolean) {
     if (  filePath.match(this.protocolsWhiteListRegExp) ||
@@ -1919,7 +1927,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
 
   /**
    * Run code chunk of `id`
-   * @param id 
+   * @param id
    */
   public async runCodeChunk(id):Promise<String> {
     let codeChunkData = this.codeChunksData[id]
@@ -1934,7 +1942,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
         id = cc.prev
       }
       cc = this.codeChunksData[id]
-      if (!cc) break 
+      if (!cc) break
       code = cc.code + code
     }
 
@@ -1942,7 +1950,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
     let result
     try {
       const options = codeChunkData.options
-      if (options['cmd'] === 'toc') { // toc code chunk. <= this is a special code chunk.  
+      if (options['cmd'] === 'toc') { // toc code chunk. <= this is a special code chunk.
         const tocObject = toc(this.headings, {ordered: options['orderedList'], depthFrom: options['depthFrom'], depthTo: options['depthTo'], tab: options['tab'] || '\t', ignoreLink: options['ignoreLink']})
         result = tocObject.content
       } else if (options['cmd'] === 'ditaa') { // ditaa diagram
@@ -1954,7 +1962,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
         const dest = await ditaaAPI.render(code, options['args'] || [], path.resolve(imageFolder, filename))
         result = `  \n![](${path.relative(this.fileDirectoryPath, dest).replace(/\\/g, '/')})  \n` // <= fix windows path issue.
       } else { // common code chunk
-        // I put this line here because some code chunks like `toc` still need to be run.  
+        // I put this line here because some code chunks like `toc` still need to be run.
         if (!this.config.enableScriptExecution) return '' // code chunk is disabled.
 
         result = await CodeChunkAPI.run(code, this.fileDirectoryPath, codeChunkData.options, this.config.latexEngine)
@@ -1964,19 +1972,19 @@ sidebarTOCBtn.addEventListener('click', function(event) {
       if (codeChunkData.options['modify_source'] && ('code_chunk_offset' in codeChunkData.options)) {
         codeChunkData.result = ''
         return MarkdownEngine.modifySource(codeChunkData, result, this.filePath)
-      } 
-      
+      }
+
       const outputFormat = codeChunkData.options['output'] || 'text'
       if (!result) { // do nothing
         result = ''
       } else if (outputFormat === 'html') {
-        result = result 
+        result = result
       } else if (outputFormat === 'png') {
         const base64 = new Buffer(result).toString('base64')
         result = `<img src="data:image/png;charset=utf-8;base64,${base64}">`
       } else if (outputFormat === 'markdown') {
         const {html} = await this.parseMD(result, {useRelativeFilePath:true, isForPreview:false, hideFrontMatter: true} )
-        result = html 
+        result = html
       } else if (outputFormat === 'none') {
         result = ''
       } else {
@@ -1987,7 +1995,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
     }
 
     codeChunkData.result = result // save result.
-    codeChunkData.running = false 
+    codeChunkData.running = false
     return result
   }
 
@@ -2000,12 +2008,12 @@ sidebarTOCBtn.addEventListener('click', function(event) {
   }
   /**
    * Add line numbers to code block <pre> element
-   * @param  
-   * @param code 
-   */  
+   * @param
+   * @param code
+   */
   private addLineNumbersIfNecessary($preElement, code:string):void {
     if ($preElement.hasClass('line-numbers') || $preElement.hasClass('numberLines')) {
-      $preElement.addClass('line-numbers') // fix for .numberLines class 
+      $preElement.addClass('line-numbers') // fix for .numberLines class
       if (!code.trim().length) return
       const match = code.match(/\n(?!$)/g)
       const linesNum = match ? (match.length + 1) : 1
@@ -2016,20 +2024,20 @@ sidebarTOCBtn.addEventListener('click', function(event) {
       $preElement.append(`<span aria-hidden="true" class="line-numbers-rows">${lines}</span>`)
     }
   }
-  
+
   /**
-   * 
+   *
    * @param preElement the cheerio element
-   * @param parameters is in the format of `lang {opt1:val1, opt2:val2}` or just `lang`       
-   * @param text 
+   * @param parameters is in the format of `lang {opt1:val1, opt2:val2}` or just `lang`
+   * @param text
    */
-  private async renderCodeBlock($, $preElement, code, parameters, 
-  { graphsCache, 
-    codeChunksArray, 
+  private async renderCodeBlock($, $preElement, code, parameters,
+  { graphsCache,
+    codeChunksArray,
     isForPreview,
     triggeredBySave }:{graphsCache:object, codeChunksArray:CodeChunkData[], isForPreview:boolean, triggeredBySave:boolean}) {
-    
-    let match, lang, optionsStr:string, options:object 
+
+    let match, lang, optionsStr:string, options:object
     if (match = parameters.match(/\s*([^\s]+)\s+\{(.+?)\}/)) {
       lang = match[1]
       optionsStr = match[2]
@@ -2054,7 +2062,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
           Prism = require(path.resolve(extensionDirectoryPath, './dependencies/prism/prism.js'))
         }
         const html = Prism.highlight(code, Prism.languages[scopeForLanguageName(lang)])
-        $preElement.html(html)  
+        $preElement.html(html)
       } catch(error) {
         // regarded as plain text
         $preElement.text(code)
@@ -2068,16 +2076,16 @@ sidebarTOCBtn.addEventListener('click', function(event) {
     const codeBlockOnly = options['code_block']
     if (codeBlockOnly) {
       renderPlainCodeBlock()
-    } else if (lang.match(/^(puml|plantuml)$/)) { // PlantUML 
+    } else if (lang.match(/^(puml|plantuml)$/)) { // PlantUML
       const checksum = md5(optionsStr + code)
-      let svg:string = this.graphsCache[checksum] 
+      let svg:string = this.graphsCache[checksum]
       if (!svg) {
         svg = await plantumlAPI.render(code, this.fileDirectoryPath)
       }
       $preElement.replaceWith(`<p ${optionsStr ? utility.stringifyAttributes(options, false) : '' }>${svg}</p>`)
-      graphsCache[checksum] = svg // store to new cache 
-      
-    } else if (lang.match(/^mermaid$/)) { // mermaid 
+      graphsCache[checksum] = svg // store to new cache
+
+    } else if (lang.match(/^mermaid$/)) { // mermaid
       /*
       // it doesn't work well...
       // the cache doesn't work well.
@@ -2087,7 +2095,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
         $preElement.replaceWith(`<div class="mermaid">${code}</div>`)
       } else {
         $preElement.replaceWith(svg)
-        graphsCache[checksum] = svg // store to new cache 
+        graphsCache[checksum] = svg // store to new cache
       }
       */
       if (options['class']) {
@@ -2106,11 +2114,11 @@ sidebarTOCBtn.addEventListener('click', function(event) {
     } else if (lang.match(/^(dot|viz)$/)) { // GraphViz
       const checksum = md5(optionsStr + code)
       let svg = this.graphsCache[checksum]
-      if (!svg) {        
+      if (!svg) {
         try {
           let engine = options['engine'] || "dot"
           svg = Viz(code, {engine})
-          
+
           $preElement.replaceWith(`<p ${optionsStr ? utility.stringifyAttributes(options, false) : '' }>${svg}</p>`)
           graphsCache[checksum] = svg // store to new cache
         } catch(e) {
@@ -2122,13 +2130,13 @@ sidebarTOCBtn.addEventListener('click', function(event) {
       }
     } else if (lang.match(/^vega$/)) { // vega
       const checksum = md5(optionsStr + code)
-      let svg:string = this.graphsCache[checksum] 
+      let svg:string = this.graphsCache[checksum]
       if (!svg) {
         try {
           svg = await vegaAPI.toSVG(code, this.fileDirectoryPath)
 
           $preElement.replaceWith(`<p ${optionsStr ? utility.stringifyAttributes(options, false) : '' }>${svg}</p>`)
-          graphsCache[checksum] = svg // store to new cache 
+          graphsCache[checksum] = svg // store to new cache
         } catch(error) {
           $preElement.replaceWith(`<pre class="language-text">${error.toString()}</pre>`)
         }
@@ -2138,13 +2146,13 @@ sidebarTOCBtn.addEventListener('click', function(event) {
       }
     } else if (lang === 'vega-lite') { // vega-lite
       const checksum = md5(optionsStr + code)
-      let svg:string = this.graphsCache[checksum] 
+      let svg:string = this.graphsCache[checksum]
       if (!svg) {
         try {
           svg = await vegaLiteAPI.toSVG(code, this.fileDirectoryPath)
 
           $preElement.replaceWith(`<p ${optionsStr ? utility.stringifyAttributes(options, false) : '' }>${svg}</p>`)
-          graphsCache[checksum] = svg // store to new cache 
+          graphsCache[checksum] = svg // store to new cache
         } catch(error) {
           $preElement.replaceWith(`<pre class="language-text">${error.toString()}</pre>`)
         }
@@ -2165,7 +2173,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
       $el.attr({
         'data-id': options['id'],
         'data-cmd': options['cmd'],
-        'data-code': options['cmd'] === 'javascript' ? code : '' 
+        'data-code': options['cmd'] === 'javascript' ? code : ''
       })
 
       let highlightedBlock = ''
@@ -2205,11 +2213,11 @@ sidebarTOCBtn.addEventListener('click', function(event) {
         }
         this.codeChunksData[options['id']] = codeChunkData
       } else {
-        codeChunkData.code = code 
+        codeChunkData.code = code
         codeChunkData.options = options
         codeChunkData.prev = previousCodeChunkDataId
       }
-      if (previousCodeChunkDataId && this.codeChunksData[previousCodeChunkDataId]) 
+      if (previousCodeChunkDataId && this.codeChunksData[previousCodeChunkDataId])
         this.codeChunksData[previousCodeChunkDataId].next = options['id']
 
       codeChunksArray.push(codeChunkData) // this line has to be put above the `if` statement.
@@ -2219,10 +2227,10 @@ sidebarTOCBtn.addEventListener('click', function(event) {
       }
 
       let result = codeChunkData.result
-      // element option 
+      // element option
       if (!result && codeChunkData.options['element']) {
         result = codeChunkData.options['element']
-        codeChunkData.result = result 
+        codeChunkData.result = result
       }
 
       if (codeChunkData.running) {
@@ -2250,10 +2258,10 @@ sidebarTOCBtn.addEventListener('click', function(event) {
 
   /**
    * Extend table syntax to support colspan and rowspan for merging cells
-   * @param $ 
+   * @param $
    */
   private extendTableSyntax($) {
-    const rowspans:Array<[object, object]> = [], // ^ 
+    const rowspans:Array<[object, object]> = [], // ^
           colspans:Array<[object, object]> = [], // >
           colspans2:Array<[object, object]> = []  // empty
     $('table').each((i, table)=> {
@@ -2284,7 +2292,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
                 // $col.remove()
               }
 
-            } else if (text.trim() === '>') { // merge to right 
+            } else if (text.trim() === '>') { // merge to right
               const $next = $col.next()
               if ($next.length) {
                 // const colspan = parseInt($next.attr('colspan')) || 1
@@ -2321,12 +2329,12 @@ sidebarTOCBtn.addEventListener('click', function(event) {
 
   /**
    * This function resovle image paths and render code blocks
-   * @param html the html string that we will analyze 
-   * @return html 
+   * @param html the html string that we will analyze
+   * @return html
    */
   private async resolveImagePathAndCodeBlock(html, options:MarkdownEngineRenderOption) {
     let $ = cheerio.load(html, {xmlMode:true})
-    
+
     // new caches
     // which will be set when this.renderCodeBlocks is called
     const newGraphsCache:{[key:string]:string} = {}
@@ -2334,12 +2342,12 @@ sidebarTOCBtn.addEventListener('click', function(event) {
 
     const asyncFunctions = []
     $('pre').each((i, preElement)=> {
-      let codeBlock, lang, code 
+      let codeBlock, lang, code
       const $preElement = $(preElement)
       if (preElement.children[0] && preElement.children[0].name === 'code') {
         codeBlock = $preElement.children().first()
         lang = 'text'
-        
+
         let classes;
         if (this.config.usePandocParser) {
           const dataLang = utility.unescapeString($preElement.attr('data-lang') || '')
@@ -2348,10 +2356,10 @@ sidebarTOCBtn.addEventListener('click', function(event) {
             const code = codeBlock.text()
             codeBlock.text(code.replace(/^```{\.mpe\-code\s*data\-lang=\"(.+?)\"}/, ($0, $1)=> `\`\`\`${utility.unescapeString($1)}`))
           } else {
-            classes = 'language-' + dataLang            
+            classes = 'language-' + dataLang
           }
         } else {
-          classes = codeBlock.attr('class')          
+          classes = codeBlock.attr('class')
         }
 
         if (!classes) classes = 'language-text'
@@ -2368,8 +2376,8 @@ sidebarTOCBtn.addEventListener('click', function(event) {
           code = ''
         $preElement.attr('class', 'language-text')
       }
-      
-      asyncFunctions.push(this.renderCodeBlock($, $preElement, code, lang, 
+
+      asyncFunctions.push(this.renderCodeBlock($, $preElement, code, lang,
         {graphsCache: newGraphsCache, codeChunksArray, isForPreview:options.isForPreview, triggeredBySave: options.triggeredBySave}))
     })
 
@@ -2385,8 +2393,8 @@ sidebarTOCBtn.addEventListener('click', function(event) {
       const img = $(imgElement)
       const src = img.attr(srcTag)
 
-      // insert anchor for scroll sync.  
-      if (options.isForPreview && imgElement.name !== 'a' && img.parent().prev().hasClass('sync-line')) { 
+      // insert anchor for scroll sync.
+      if (options.isForPreview && imgElement.name !== 'a' && img.parent().prev().hasClass('sync-line')) {
         const lineNo = parseInt(img.parent().prev().attr('data-line'))
         if (lineNo)
           img.parent().after(`<p data-line="${lineNo + 1}" class="sync-line" style="margin:0;"></p>`)
@@ -2395,14 +2403,14 @@ sidebarTOCBtn.addEventListener('click', function(event) {
       img.attr(srcTag, this.resolveFilePath(src, options.useRelativeFilePath))
     })
 
-    // reset caches 
+    // reset caches
     // the line below actually has problem.
     if (options.isForPreview) {
       this.graphsCache = newGraphsCache
       // console.log(this.graphsCache)
-    } 
+    }
 
-    if (!this.config.usePandocParser) { // check .mume-header in order to add id and class to headers.  
+    if (!this.config.usePandocParser) { // check .mume-header in order to add id and class to headers.
       $('.mume-header').each((i, e)=> {
         const classes = e.attribs.class,
               id = e.attribs.id
@@ -2473,7 +2481,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
    * else return {
    *      content: replace ---\n with ```yaml
    * }
-   * 
+   *
    */
   private processFrontMatter(frontMatterString:string, hideFrontMatter=false) {
     if (frontMatterString) {
@@ -2485,7 +2493,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
         return {content:'', table: '', data}
       } else if (this.config.frontMatterRenderingOption[0] === 't') { // table
         // to table
-        let table 
+        let table
         if (typeof(data) === 'object')
           table = this.frontMatterToTable(data)
         else
@@ -2557,8 +2565,8 @@ sidebarTOCBtn.addEventListener('click', function(event) {
     let i = 0,
         h = -1, // horizontal
         v = 0  // vertical
-    while (i < slides.length) { 
-      const slide = slides[i] 
+    while (i < slides.length) {
+      const slide = slides[i]
       const slideConfig = slideConfigs[i]
 
       // resolve paths in slideConfig
@@ -2602,7 +2610,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
     $('li').each((i, elem)=> {
       const $elem = $(elem),
             html = $elem.html().trim()
-      let attributeMatch 
+      let attributeMatch
       if (attributeMatch = html.match(/<!--(.+?)-->/)) {
         let attributes = attributeMatch[1].replace(/\.element\:/, '').trim()
         let attrObj = utility.parseAttributes(attributes)
@@ -2642,7 +2650,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
     let inCodeBlock = false,
         codeBlockSpacesAhead = 0
     while (i < lines.length) {
-      let line = lines[i]      
+      let line = lines[i]
       let match = line.match(/(^\s*)```/)
       if (match) {
         inCodeBlock = !inCodeBlock
@@ -2651,7 +2659,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
           let lang = utility.escapeString(line.slice(match[0].length)).trim()
           if (!lang) lang = 'text'
 
-          // TODO: doesn't work well with code chunk. Fix in the future.  
+          // TODO: doesn't work well with code chunk. Fix in the future.
           // let cmatch = null
           // if (cmatch = lang.match(/^\{\s*\.([\w\d]+)/)) { // ``` {.java}
           // lang = cmatch[1] + ' ' + lang
@@ -2660,7 +2668,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
           codeBlockSpacesAhead = match[1].length
           outputString += `${match[1]}\`\`\`{.mpe-code data-lang="${lang}"}\n`
         } else if (match[1].length === codeBlockSpacesAhead) {
-          outputString += `${match[1]}\`\`\`\n` 
+          outputString += `${match[1]}\`\`\`\n`
         } else {
           inCodeBlock = !inCodeBlock
           outputString += line + '\n'
@@ -2704,10 +2712,10 @@ sidebarTOCBtn.addEventListener('click', function(event) {
       inputString = await utility.configs.parserConfig['onWillParseMarkdown'](inputString)
     }
 
-    // import external files and insert anchors if necessary 
-    let {outputString, slideConfigs, tocBracketEnabled, JSAndCssFiles, headings, frontMatterString} = await transformMarkdown(inputString, 
+    // import external files and insert anchors if necessary
+    let {outputString, slideConfigs, tocBracketEnabled, JSAndCssFiles, headings, frontMatterString} = await transformMarkdown(inputString,
     {
-      fileDirectoryPath: this.fileDirectoryPath, 
+      fileDirectoryPath: this.fileDirectoryPath,
       projectDirectoryPath: this.projectDirectoryPath,
       forPreview: options.isForPreview,
       protocolsWhiteListRegExp: this.protocolsWhiteListRegExp,
@@ -2719,7 +2727,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
     // process front-matter
     const fm = this.processFrontMatter(frontMatterString, options.hideFrontMatter)
     const frontMatterTable = fm.table,
-          yamlConfig = fm.data || {} 
+          yamlConfig = fm.data || {}
     outputString = fm.content + outputString
 
     /**
@@ -2734,7 +2742,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
         // check bibliography
         if (yamlConfig['bibliography'] || yamlConfig['references'])
           args.push('--filter', 'pandoc-citeproc')
-        
+
         args = this.config.pandocArguments.concat(args)
 
         html = await this.pandocRender(outputString, args)
@@ -2795,7 +2803,7 @@ sidebarTOCBtn.addEventListener('click', function(event) {
       this.exportOnSave(yamlConfig['export_on_save'])
     }
 
-    if (!this.config.enableScriptExecution) { // disable importing js and css files.  
+    if (!this.config.enableScriptExecution) { // disable importing js and css files.
       JSAndCssFiles = []
     }
 

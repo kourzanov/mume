@@ -13,11 +13,23 @@ import {toc} from "./toc"
 
 const md5 = require(path.resolve(utility.extensionDirectoryPath, './dependencies/javascript-md5/md5.js'))
 
+function processWiki(text,config) {
+    return text.replace(/\[\[([^\]]*)\]\]/g,(whole,txt)=>{
+        let path=config['mdbase']
+        if (path) path += "/"
+        return `[${txt}](${path}${txt}.md)`
+    }).replace(/{\+\+([^+]*)\+\+}/g,"<ins>$1</ins>")
+      .replace(/{--([^-]*)--}/g,"<del>$1</del>")
+      .replace(/{==([^=]*)==}/g,"<hl>$1</hl>")
+      .replace(/{~~([^~]*)~>([^~]*)~~}/g,"<del>$1</del><ins>$2</ins>")
+      .replace(/{>>([^<]*)<<}/g,"<!-- $1 -->")
+}
+
 
 /**
- * Convert all math expressions inside markdown to images.  
+ * Convert all math expressions inside markdown to images.
  * @param text input markdown text
- * @param config 
+ * @param config
  */
 function processMath(text:string, {mathInlineDelimiters, mathBlockDelimiters}):string {
   let line = text.replace(/\\\$/g, '#slash_dollarsign#')
@@ -66,11 +78,11 @@ function processMath(text:string, {mathInlineDelimiters, mathBlockDelimiters}):s
 
 /**
  * Format paths
- * @param text 
- * @param fileDirectoryPath 
- * @param projectDirectoryPath 
- * @param useRelativeFilePath 
- * @param protocolsWhiteListRegExp 
+ * @param text
+ * @param fileDirectoryPath
+ * @param projectDirectoryPath
+ * @param useRelativeFilePath
+ * @param protocolsWhiteListRegExp
  */
 function processPaths(text, fileDirectoryPath, projectDirectoryPath, useRelativeFilePath, protocolsWhiteListRegExp:RegExp) {
   let match = null,
@@ -124,9 +136,9 @@ function processPaths(text, fileDirectoryPath, projectDirectoryPath, useRelative
   return lines.join('\n')
 }
 
-export async function markdownConvert(text, 
+export async function markdownConvert(text,
 {projectDirectoryPath, fileDirectoryPath, protocolsWhiteListRegExp, filesCache, mathInlineDelimiters, mathBlockDelimiters, codeChunksData, graphsCache, usePandocParser}:
-{projectDirectoryPath:string, fileDirectoryPath:string, protocolsWhiteListRegExp:RegExp, filesCache:{[key:string]:string}, mathInlineDelimiters:string[][], mathBlockDelimiters:string[][], codeChunksData:{[key:string]:CodeChunkData}, graphsCache:{[key:string]:string}, usePandocParser: boolean}, 
+{projectDirectoryPath:string, fileDirectoryPath:string, protocolsWhiteListRegExp:RegExp, filesCache:{[key:string]:string}, mathInlineDelimiters:string[][], mathBlockDelimiters:string[][], codeChunksData:{[key:string]:CodeChunkData}, graphsCache:{[key:string]:string}, usePandocParser: boolean},
 config:object):Promise<string> {
   if (!config['path'])
     throw '{path} has to be specified'
@@ -142,7 +154,7 @@ config:object):Promise<string> {
     outputFilePath = path.resolve(fileDirectoryPath, config['path'])
 
   for (let key in filesCache) {
-    if (key.endsWith('.pdf')) 
+    if (key.endsWith('.pdf'))
       delete(filesCache[key])
   }
 
@@ -155,7 +167,7 @@ config:object):Promise<string> {
   const useRelativeFilePath = !config['absolute_image_path']
 
   // import external files
-  const data = await transformMarkdown(text, {fileDirectoryPath, projectDirectoryPath, useRelativeFilePath, filesCache, forPreview:false, forMarkdownExport:true, protocolsWhiteListRegExp, imageDirectoryPath, usePandocParser})
+  const data = await transformMarkdown(text, {fileDirectoryPath, projectDirectoryPath, useRelativeFilePath, filesCache, forPreview:false, forMarkdownExport:true, protocolsWhiteListRegExp, imageDirectoryPath, usePandocParser}, config['base'], config['token'])
   text = data.outputString
 
   // replace [MUMETOC]
@@ -172,15 +184,17 @@ config:object):Promise<string> {
 
   text = processMath(text, {mathInlineDelimiters, mathBlockDelimiters})
 
+  text = processWiki(text,config)
+
   return await new Promise<string>((resolve, reject)=> {
     mkdirp(imageDirectoryPath, (error, made)=> {
       if (error) return reject(error.toString())
 
-      processGraphs(text, 
-      {fileDirectoryPath, projectDirectoryPath, imageDirectoryPath, imageFilePrefix: md5(outputFilePath), useRelativeFilePath, codeChunksData, graphsCache})
+      processGraphs(text,
+      {fileDirectoryPath, projectDirectoryPath, imageDirectoryPath, imageFilePrefix: md5(outputFilePath), useRelativeFilePath, codeChunksData, graphsCache}, config['base'], config['token'])
       .then(({outputString})=> {
-        outputString = data.frontMatterString + outputString // put the front-matter back.  
-        
+        outputString = data.frontMatterString + outputString // put the front-matter back.
+
         fs.writeFile(outputFilePath, outputString, {encoding: 'utf-8'}, (error)=> {
           if (error) return reject(error.toString())
           return resolve(outputFilePath)
@@ -189,6 +203,3 @@ config:object):Promise<string> {
     })
   })
 }
-
-
-

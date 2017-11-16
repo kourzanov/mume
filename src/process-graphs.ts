@@ -14,9 +14,9 @@ import {CodeChunkData} from "./code-chunk-data"
 const Viz = require(path.resolve(utility.extensionDirectoryPath, './dependencies/viz/viz.js'))
 const md5 = require(path.resolve(utility.extensionDirectoryPath, './dependencies/javascript-md5/md5.js'))
 
-export async function processGraphs(text:string, 
+export async function processGraphs(text:string,
 {fileDirectoryPath, projectDirectoryPath, imageDirectoryPath, imageFilePrefix, useRelativeFilePath, codeChunksData, graphsCache}:
-{fileDirectoryPath:string, projectDirectoryPath:string, imageDirectoryPath:string, imageFilePrefix:string, useRelativeFilePath:boolean, codeChunksData: {[key:string]: CodeChunkData}, graphsCache:{[key:string]:string}})
+{fileDirectoryPath:string, projectDirectoryPath:string, imageDirectoryPath:string, imageFilePrefix:string, useRelativeFilePath:boolean, codeChunksData: {[key:string]: CodeChunkData}, graphsCache:{[key:string]:string}}, base='', token='')
 :Promise<{outputString:string, imagePaths: string[]}> {
   let lines = text.split('\n')
   const codes:Array<{start:number, end:number, content:string, options:object, optionsStr:string}> = []
@@ -46,8 +46,8 @@ export async function processGraphs(text:string,
           }
 
           codes.push({
-            start: i, 
-            end: j, 
+            start: i,
+            end: j,
             content,
             options,
             optionsStr
@@ -64,14 +64,14 @@ export async function processGraphs(text:string,
         lines[i] = line.slice(0, indexOfFirstSpace)
     } else if (!trimmedLine) {
       lines[i] = '  '
-    } 
+    }
 
     i += 1
-  }  
+  }
 
-  if (!imageFilePrefix) 
+  if (!imageFilePrefix)
     imageFilePrefix = (Math.random().toString(36).substr(2, 9) + '_')
-  
+
   imageFilePrefix = imageFilePrefix.replace(/[\/&]/g, '_ss_')
   imageFilePrefix = encodeURIComponent(imageFilePrefix)
 
@@ -80,7 +80,7 @@ export async function processGraphs(text:string,
   const asyncFunctions = [],
         imagePaths = []
 
-  let currentCodeChunk:CodeChunkData = null 
+  let currentCodeChunk:CodeChunkData = null
   for (let key in codeChunksData) { // get the first code chunk.
     if (!codeChunksData[key].prev) {
       currentCodeChunk = codeChunksData[key]
@@ -97,7 +97,7 @@ export async function processGraphs(text:string,
   }
 
   async function convertSVGToPNGFile(outFileName='', svg:string, lines:string[], start:number, end:number, modifyCodeBlock:boolean) {
-    if (!outFileName) 
+    if (!outFileName)
       outFileName = imageFilePrefix+imgCount+'.png'
 
     const pngFilePath = path.resolve(imageDirectoryPath, outFileName)
@@ -111,9 +111,11 @@ export async function processGraphs(text:string,
     displayPNGFilePath = displayPNGFilePath.replace(/\\/g, '/') // fix windows path error.
 
     imgCount++
-  
+
     if (modifyCodeBlock) {
       clearCodeBlock(lines, start, end)
+      if (base) displayPNGFilePath = base + "/" + displayPNGFilePath
+      if (token) displayPNGFilePath += `&access_token=${token}`
       lines[end] += '\n' + `![](${displayPNGFilePath})  `
     }
 
@@ -126,12 +128,12 @@ export async function processGraphs(text:string,
     const {start, end, content, options, optionsStr} = codeData
     const def = lines[start].trim().slice(3).trim()
 
-    if (options['code_block']) { 
+    if (options['code_block']) {
       // Do Nothing
-    } else if (def.match(/^(puml|plantuml)/)) { 
+    } else if (def.match(/^(puml|plantuml)/)) {
       try {
         const checksum = md5(optionsStr + content)
-        let svg 
+        let svg
         if (!(svg = graphsCache[checksum])) { // check whether in cache
           svg = await plantumlAPI.render(content, fileDirectoryPath)
         }
@@ -143,7 +145,7 @@ export async function processGraphs(text:string,
     } else if (def.match(/^(viz|dot)/)) {
       try {
         const checksum = md5(optionsStr + content)
-        let svg 
+        let svg
         if (!(svg = graphsCache[checksum])) {
           const engine = options['engine'] || 'dot'
           svg = Viz(content, {engine})
@@ -156,7 +158,7 @@ export async function processGraphs(text:string,
     } else if (def.match(/^vega\-lite/)) { // vega-lite
       try {
         const checksum = md5(optionsStr + content)
-        let svg 
+        let svg
         if (!(svg = graphsCache[checksum])) {
           svg = await vegaLiteAPI.toSVG(content, fileDirectoryPath)
         }
@@ -168,7 +170,7 @@ export async function processGraphs(text:string,
     } else if (def.match(/^vega/)) { // vega
       try {
         const checksum = md5(optionsStr + content)
-        let svg 
+        let svg
         if (!(svg = graphsCache[checksum])) {
           svg = await vegaAPI.toSVG(content, fileDirectoryPath)
         }
@@ -192,7 +194,7 @@ export async function processGraphs(text:string,
           displayPNGFilePath = '/' + path.relative(projectDirectoryPath, pngFilePath) + '?' + Math.random()
         }
         clearCodeBlock(lines, start, end)
-        
+
         lines[end] += '\n' + `![](${displayPNGFilePath})  `
 
         imagePaths.push(pngFilePath)
@@ -204,7 +206,7 @@ export async function processGraphs(text:string,
     } else if (currentCodeChunk) { // code chunk
       if (currentCodeChunk.options['hide']) { // remove code block
         clearCodeBlock(lines, start, end)
-      } else { // remove {...} after ```lang  
+      } else { // remove {...} after ```lang
         const line = lines[start]
         const indexOfFirstSpace = line.indexOf(' ', line.indexOf('```'))
         lines[start] = line.slice(0, indexOfFirstSpace)
@@ -218,6 +220,8 @@ export async function processGraphs(text:string,
           const svg = $('svg')
           if (svg.length === 1) {
             const pngFilePath = (await convertSVGToPNGFile(options['filename'], $.html('svg'), lines, start, end, false)).replace(/\\/g, '/')
+            if (base) pngFilePath = base + "/" + pngFilePath
+            if (token) pngFilePath += `&access_token=${token}`
             result = `![](${pngFilePath})  \n`
           }
         } else if (options['cmd'].match(/^(la)?tex$/)) { // for latex, need to run it again to generate svg file in currect directory.
@@ -225,7 +229,7 @@ export async function processGraphs(text:string,
         } else if (currentCodeChunk.options['output'] === 'markdown') {
           result = currentCodeChunk.plainResult
         } else if (!options['output'] || options['output'] === 'text') {
-          result = `\n\`\`\`\n${currentCodeChunk.plainResult}\`\`\`\n` 
+          result = `\n\`\`\`\n${currentCodeChunk.plainResult}\`\`\`\n`
         }
 
         lines[end] += ('\n' + result)

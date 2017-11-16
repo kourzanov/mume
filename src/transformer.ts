@@ -28,11 +28,11 @@ export interface HeadingData {
 export interface TransformMarkdownOutput {
   outputString: string,
   /**
-   * An array of slide configs.  
+   * An array of slide configs.
    */
   slideConfigs: Array<object>,
   /**
-   * whehter we found [TOC] in markdown file or not.  
+   * whehter we found [TOC] in markdown file or not.
    */
   tocBracketEnabled: boolean
 
@@ -41,19 +41,19 @@ export interface TransformMarkdownOutput {
    * convert .js file to <script src='...'></script>
    * convert .css file to <link href='...'></link>
    */
-  JSAndCssFiles: string[] 
+  JSAndCssFiles: string[]
 
   headings: HeadingData[]
 
   /**
-   * Get `---\n...\n---\n` string.  
+   * Get `---\n...\n---\n` string.
    */
-  frontMatterString: string 
+  frontMatterString: string
 }
 
 export interface TransformMarkdownOptions {
-  fileDirectoryPath: string 
-  projectDirectoryPath: string 
+  fileDirectoryPath: string
+  projectDirectoryPath: string
   filesCache: {[key:string]: string}
   useRelativeFilePath: boolean
   forPreview: boolean
@@ -127,7 +127,7 @@ function createAnchor(lineNo) {
 }
 
 let DOWNLOADS_TEMP_FOLDER = null
-/** 
+/**
  * download file and return its local path
  */
 function downloadFileIfNecessary(filePath:string):Promise<string> {
@@ -154,11 +154,11 @@ function downloadFileIfNecessary(filePath:string):Promise<string> {
 
 
 /**
- * 
+ *
  * Load file by `filePath`
- * @param filePath 
- * @param param1 
- * @param filesCache 
+ * @param filePath
+ * @param param1
+ * @param filesCache
  */
 async function loadFile(filePath:string, {fileDirectoryPath, forPreview, imageDirectoryPath}, filesCache={}):Promise<string> {
   if (filesCache[filePath])
@@ -176,7 +176,7 @@ async function loadFile(filePath:string, {fileDirectoryPath, forPreview, imageDi
   else if (filePath.endsWith('.pdf')) { // pdf file
     const localFilePath = await downloadFileIfNecessary(filePath)
     const svgMarkdown = await PDF.toSVGMarkdown(localFilePath, {markdownDirectoryPath: fileDirectoryPath, svgDirectoryPath: imageDirectoryPath})
-    return svgMarkdown 
+    return svgMarkdown
   }
   /*
   else if filePath.endsWith('.js') # javascript file
@@ -207,16 +207,16 @@ async function loadFile(filePath:string, {fileDirectoryPath, forPreview, imageDi
 }
 
 /**
- * 
- * @param inputString 
- * @param fileDirectoryPath 
- * @param projectDirectoryPath 
- * @param param3 
+ *
+ * @param inputString
+ * @param fileDirectoryPath
+ * @param projectDirectoryPath
+ * @param param3
  */
-export async function transformMarkdown(inputString:string, 
-                            { fileDirectoryPath = '', 
-                              projectDirectoryPath = '', 
-                              filesCache = {}, 
+export async function transformMarkdown(inputString:string,
+                            { fileDirectoryPath = '',
+                              projectDirectoryPath = '',
+                              filesCache = {},
                               useRelativeFilePath = null,
                               forPreview = false,
                               forMarkdownExport = false,
@@ -224,7 +224,7 @@ export async function transformMarkdown(inputString:string,
                               notSourceFile = false,
                               imageDirectoryPath = '',
                               usePandocParser = false,
-                              tocTable = {} }:TransformMarkdownOptions):Promise<TransformMarkdownOutput> {
+                              tocTable = {} }:TransformMarkdownOptions, base='', token=''):Promise<TransformMarkdownOutput> {
     let inBlock = false // inside code block
     let codeChunkOffset = 0
     const tocConfigs = [],
@@ -237,7 +237,7 @@ export async function transformMarkdown(inputString:string,
     /**
      * As the recursive version of this function will cause the error:
      *   RangeError: Maximum call stack size exceeded
-     * I wrote it in iterative way.  
+     * I wrote it in iterative way.
      * @param i start offset
      * @param lineNo start line number
      */
@@ -277,7 +277,7 @@ export async function transformMarkdown(inputString:string,
         if (inBlock) {
           // return helper(end+1, lineNo+1, outputString+line+'\n')
           i = end + 1
-          lineNo = lineNo + 1 
+          lineNo = lineNo + 1
           outputString = outputString+line+'\n'
           continue
         }
@@ -295,9 +295,9 @@ export async function transformMarkdown(inputString:string,
         */
         if (line.match(/^(\!\[|@import)/) && inputString[i - 1] === '\n' && inputString[i - 2] === '\n' ) {
           if (forPreview) outputString += createAnchor(lineNo) // insert anchor for scroll sync
-        } else if (headingMatch = line.match(/^(\#{1,7})(.+)/)) /* ((headingMatch = line.match(/^(\#{1,7})(.+)$/)) || 
-                  // the ==== and --- headers don't work well. For example, table and list will affect it, therefore I decide not to support it.  
-                  (inputString[end + 1] === '=' && inputString[end + 2] === '=') || 
+        } else if (headingMatch = line.match(/^(\#{1,7})(.+)/)) /* ((headingMatch = line.match(/^(\#{1,7})(.+)$/)) ||
+                  // the ==== and --- headers don't work well. For example, table and list will affect it, therefore I decide not to support it.
+                  (inputString[end + 1] === '=' && inputString[end + 2] === '=') ||
                   (inputString[end + 1] === '-' && inputString[end + 2] === '-')) */ { // headings
 
           if (forPreview) outputString += createAnchor(lineNo)
@@ -314,9 +314,9 @@ export async function transformMarkdown(inputString:string,
             } else {
               heading = line.trim()
               tag = '##'
-              level = 2     
+              level = 2
             }
-            
+
             end = inputString.indexOf('\n', end + 1)
             if (end < 0) end = inputString.length
           }*/
@@ -336,7 +336,7 @@ export async function transformMarkdown(inputString:string,
 
             try {
               let opt = utility.parseAttributes(optMatch[0])
-              
+
               classes = opt['class'],
               id = opt['id'],
               ignore = opt['ignore']
@@ -372,7 +372,7 @@ export async function transformMarkdown(inputString:string,
             if (id) optionsStr += `#${id} `
             if (classes) optionsStr += '.' + classes.replace(/\s+/g, ' .') + ' '
             optionsStr += '}'
-            
+
             // return helper(end+1, lineNo+1, outputString + `${tag} ${heading} ${optionsStr}` + '\n')
             i = end + 1
             lineNo = lineNo + 1
@@ -385,13 +385,13 @@ export async function transformMarkdown(inputString:string,
               line = `${tag} ${heading}`
             }
 
-            // return helper(end+1, lineNo+1, outputString + line + '\n\n') 
+            // return helper(end+1, lineNo+1, outputString + line + '\n\n')
             i = end + 1
             lineNo = lineNo + 1
             outputString = outputString + line + '\n\n'
             continue
-            // I added one extra `\n` here because remarkable renders content below 
-            // heading differently with `\n` and without `\n`.  
+            // I added one extra `\n` here because remarkable renders content below
+            // heading differently with `\n` and without `\n`.
           }
         } else if (line.match(/^\<!--/)) { // custom comment
           if (forPreview) outputString += createAnchor(lineNo)
@@ -404,7 +404,7 @@ export async function transformMarkdown(inputString:string,
             outputString = outputString + '\n'
             continue
           }
-          else 
+          else
             commentEnd += 3
 
           let subjectMatch = line.match(/^\<!--\s+([^\s]+)/)
@@ -444,7 +444,7 @@ export async function transformMarkdown(inputString:string,
                 outputString = outputString + '<div class="pagebreak"> </div>\n'
                 continue
 
-              } else if (subject.match(/^\.?slide\:?$/)) { // slide 
+              } else if (subject.match(/^\.?slide\:?$/)) { // slide
                 slideConfigs.push(options)
                 if (forMarkdownExport) {
                   // return helper(commentEnd, lineNo + newlines, outputString + `<!-- ${content} -->` + '\n')
@@ -470,11 +470,11 @@ export async function transformMarkdown(inputString:string,
               lineNo = lineNo + newlines
               outputString = outputString + '\n'
               continue
-            } 
+            }
           }
         } else if (line.match(/^\s*\[toc\]\s*$/i)) { // [TOC]
           if (forPreview) outputString += createAnchor(lineNo) // insert anchor for scroll sync
-          tocBracketEnabled = true 
+          tocBracketEnabled = true
           // return helper(end+1, lineNo+1, outputString + `\n[MUMETOC]\n\n`)
           i = end+1
           lineNo = lineNo+1
@@ -485,7 +485,7 @@ export async function transformMarkdown(inputString:string,
           const checked = taskListItemMatch[1] !== '[ ]'
           if (!forMarkdownExport) {
             line = line.replace(
-              taskListItemMatch[1], 
+              taskListItemMatch[1],
               `<input type="checkbox" class="task-list-item-checkbox${forPreview ? ' sync-line' : ''}" ${forPreview ? `data-line="${lineNo}"` : '' }${checked? ' checked' : ''}>`)
           }
           // return helper(end+1, lineNo+1, outputString+line+`\n`)
@@ -500,7 +500,7 @@ export async function transformMarkdown(inputString:string,
             let end = inputString.indexOf(closeTagName, i + htmlTagMatch[0].length)
             if (end < 0) {
               // HTML error. Tag not closed
-              // Do Nothing here. Reason: 
+              // Do Nothing here. Reason:
               //     $$ x
               //     <y>
               //     $$
@@ -524,7 +524,7 @@ export async function transformMarkdown(inputString:string,
           }
         }
 
-        // file import 
+        // file import
         let importMatch
         if (importMatch = line.match(/^(\s*)\@import(\s+)\"([^\"]+)\";?/)) {
           outputString += importMatch[1]
@@ -557,15 +557,21 @@ export async function transformMarkdown(inputString:string,
           const extname = path.extname(filePath).toLocaleLowerCase()
           let output = ''
           if (['.jpeg', '.jpg', '.gif', '.png', '.apng', '.svg', '.bmp'].indexOf(extname) >= 0) { // image
-            let imageSrc:string = filesCache[filePath]
+            let imageSrc:string = '' //filesCache[filePath]
 
             if (!imageSrc) {
-              if (filePath.match(protocolsWhiteListRegExp))
-                imageSrc = filePath
-              else if (useRelativeFilePath)
-                imageSrc = path.relative(fileDirectoryPath, absoluteFilePath) + '?' + Math.random()
-              else 
-                imageSrc = '/' + path.relative(projectDirectoryPath, absoluteFilePath) + '?' + Math.random()
+              if (filePath.match(protocolsWhiteListRegExp)) {
+                  if (base) imageSrc = base + "/"
+                  imageSrc += filePath
+                  if (token) imageSrc += `?access_token=${token}`
+              } else {
+                  if (base) imageSrc = base + "/"
+                  if (useRelativeFilePath)
+                      imageSrc += path.relative(fileDirectoryPath, absoluteFilePath) + '?' + Math.random()
+                  else
+                      imageSrc += '/' + path.relative(projectDirectoryPath, absoluteFilePath) + '?' + Math.random()
+                  if (token) imageSrc += `&access_token=${token}`
+              }
 
               // enchodeURI(imageSrc) is wrong. It will cause issue on Windows
               // #414: https://github.com/shd101wyy/markdown-preview-enhanced/issues/414
@@ -574,7 +580,7 @@ export async function transformMarkdown(inputString:string,
             }
 
             if (config) {
-              if (config['width'] || config['height'] || config['class'] || config['id']) {
+              if (config['width'] || config['height'] || config['class'] || config['id'] || config['usemap']) {
                 output = `<img src="${imageSrc}" `
                 for (let key in config) {
                   output += ` ${key}="${config[key]}" `
@@ -608,11 +614,11 @@ export async function transformMarkdown(inputString:string,
             }
             config['cmd'] = 'toc'
             config['hide'] = true
-            config['run_on_save'] = true 
+            config['run_on_save'] = true
             config['modify_source'] = true
             if (!notSourceFile) { // mark code_chunk_offset
               config['code_chunk_offset'] = codeChunkOffset
-              codeChunkOffset++          
+              codeChunkOffset++
             }
 
             const output = `\`\`\`text ${utility.stringifyAttributes(config)}  \n\`\`\`  `
@@ -645,11 +651,11 @@ export async function transformMarkdown(inputString:string,
               else if (['.md', '.markdown', '.mmark'].indexOf(extname) >= 0) { // markdown files
                 // this return here is necessary
                 let {outputString:output, headings:headings2} = await transformMarkdown(fileContent, {
-                  fileDirectoryPath: path.dirname(absoluteFilePath), 
-                  projectDirectoryPath, 
-                  filesCache, 
-                  useRelativeFilePath: false, 
-                  forPreview: false, 
+                  fileDirectoryPath: path.dirname(absoluteFilePath),
+                  projectDirectoryPath,
+                  filesCache,
+                  useRelativeFilePath: false,
+                  forPreview: false,
                   forMarkdownExport,
                   protocolsWhiteListRegExp,
                   notSourceFile: true, // <= this is not the sourcefile
@@ -659,7 +665,7 @@ export async function transformMarkdown(inputString:string,
                 })
                 output = '\n' + output + '  '
                 headings = headings.concat(headings2)
-                
+
                 // return helper(end+1, lineNo+1, outputString+output+'\n')
                 i = end + 1
                 lineNo = lineNo + 1
@@ -685,7 +691,7 @@ export async function transformMarkdown(inputString:string,
                     sourcePath = filePath
                   else if (useRelativeFilePath)
                     sourcePath = path.relative(fileDirectoryPath, absoluteFilePath)
-                  else 
+                  else
                     sourcePath = 'file:///' + absoluteFilePath
 
                   if (extname === '.js') {
@@ -695,7 +701,7 @@ export async function transformMarkdown(inputString:string,
                   }
                 } else {
                   output = ''
-                } 
+                }
                 JSAndCssFiles.push(filePath)
               }
               else if (/*extname === '.css' || */ extname === '.less') { // css or less file
@@ -712,9 +718,9 @@ export async function transformMarkdown(inputString:string,
                   const pages = fileContent.split('\n')
                   let pageBegin = parseInt(config['page_begin']) - 1 || 0
                   const pageEnd = config['page_end'] || pages.length - 1
-                  if (pageBegin < 0) pageBegin = 0 
+                  if (pageBegin < 0) pageBegin = 0
                   output = pages.slice(pageBegin, pageEnd).join('\n') || ''
-                } 
+                }
                 else {
                   output = fileContent
                 }
@@ -732,7 +738,7 @@ export async function transformMarkdown(inputString:string,
               else if extname in ['.wavedrom']
                 output = "```wavedrom\n${fileContent}\n```  "
                 # filesCache?[absoluteFilePath] = output
-              
+
               else if extname == '.js'
                 if forPreview
                   output = '' # js code is evaluated and there is no need to display the code.
@@ -772,7 +778,7 @@ export async function transformMarkdown(inputString:string,
         }
       }
 
-      // done 
+      // done
       return {outputString, slideConfigs, tocBracketEnabled, JSAndCssFiles, headings, frontMatterString}
     }
 
